@@ -299,6 +299,9 @@
   }
 </style>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -541,10 +544,10 @@
     <div class="enr-copy">
       <span class="note">Already enrolled?</span>
       <h2 class="h2">Paid? Your course is <mark>right here on this site.</mark></h2>
-      <p class="lede">Lessons, practice tests, homework, vocabulary and your progress are all in the Student area. You only need your personal access code.</p>
+      <p class="lede">Lessons, practice tests, homework, vocabulary and your progress are all in the Student area. You only need the Google account you registered with.</p>
       <ol class="enr-steps">
-        <li><span class="n">1</span><span><b>Get your access code</b><span>After payment, the instructor sends you a personal code like K7QD-M2XP. Keep it private.</span></span></li>
-        <li><span class="n">2</span><span><b>Open the Student area</b><span>Tap the button below, enter your code and first name.</span></span></li>
+        <li><span class="n">1</span><span><b>Register once with Google</b><span>Open the Student area, tap Continue with Google, and send the one-time access request.</span></span></li>
+        <li><span class="n">2</span><span><b>Wait for approval</b><span>After payment, the instructor approves your Gmail. From then on, that account opens the course on any device.</span></span></li>
         <li><span class="n">3</span><span><b>Start with Lesson 1</b><span>Your dashboard shows the next lesson, homework to send, and the next deadline.</span></span></li>
       </ol>
       <div class="contact" style="margin-top:4px">
@@ -556,7 +559,7 @@
     <div class="tg" aria-label="What's inside the Student area">
       <div class="tg-head">
         <span class="tg-ava" aria-hidden="true">800</span>
-        <span><b>Student area</b><small>Sign in with your access code</small></span>
+        <span><b>Student area</b><small>Sign in with Google</small></span>
       </div>
       <ul class="tg-topics">
         <li><span class="tg-ic"><svg><use href="#i-chart"/></svg></span><span><b>Dashboard</b><small>Next lesson, homework to send, deadline countdown, announcements</small></span></li>
@@ -566,7 +569,7 @@
         <li><span class="tg-ic"><svg><use href="#i-cards"/></svg></span><span><b>Vocabulary</b><small>40 SAT words: flashcards, a quiz and a matching game</small></span></li>
         <li><span class="tg-ic"><svg><use href="#i-shield"/></svg></span><span><b>Progress</b><small>Accuracy by domain, test history, study time and your score target</small></span></li>
       </ul>
-      <div class="tg-foot">Works in any browser on your phone or computer. Progress is saved on the device you use.</div>
+      <div class="tg-foot">Works in any browser on your phone or computer. Progress is saved to your Google account.</div>
     </div>
   </div>
 </section>
@@ -583,7 +586,7 @@
       <details><summary>Is my application sent automatically?<svg><use href="#i-plus"/></svg></summary><p>No. The site prepares your application and registration number, then you send it yourself in Telegram. This keeps all communication in one direct chat with the instructor.</p></details>
       <details><summary>What does the course cover?<svg><use href="#i-plus"/></svg></summary><p>The full SAT Reading &amp; Writing section across all four domains: Information &amp; Ideas, Craft &amp; Structure, Expression of Ideas, and Standard English Conventions. It does not cover SAT Math.</p></details>
       <details><summary>When are classes?<svg><use href="#i-plus"/></svg></summary><p>Tuesday, Thursday, and Saturday. The instructor shares exact times with the group. Homework is due on class days at 19:59 Uzbekistan time.</p></details>
-      <details><summary>I've paid. Where are the lessons?<svg><use href="#i-plus"/></svg></summary><p>In the Student area on this site. After payment the instructor sends you a personal access code. Open the Student area, enter the code and your first name, and everything unlocks.</p></details>
+      <details><summary>I've paid. Where are the lessons?<svg><use href="#i-plus"/></svg></summary><p>In the Student area on this site. Open the Student area, tap Continue with Google, and send the one-time request. After payment the instructor approves your Gmail, and everything unlocks on any device you sign in on.</p></details>
       <details><summary>How and when do I pay?<svg><use href="#i-plus"/></svg></summary><p>Only after the instructor confirms your place. Payment is arranged one-on-one in your Telegram chat with @rustamovabduaziz.</p></details>
       <details><summary>Do I need an SAT score to apply?<svg><use href="#i-plus"/></svg></summary><p>No. Students who haven't taken the SAT yet are welcome. A practice test score helps the instructor place you, but it's optional.</p></details>
     </div>
@@ -920,7 +923,7 @@
   </header>
   <nav class="p-tabs" id="pTabs" aria-label="Student area" hidden>
     <div class="wrap">
-      <a href="#student">Dashboard</a><a href="#s-lessons">Lessons</a><a href="#s-practice">Practice tests</a><a href="#s-mock">Full mock tests</a><a href="#s-homework">Homework</a><a href="#s-vocab">Vocabulary</a><a href="#s-progress">Progress</a>
+      <a href="#student">Dashboard</a><a href="#s-lessons">Lessons</a><a href="#s-practice">Practice tests</a><a href="#s-mock">Full mock tests</a><a href="#s-homework">Homework</a><a href="#s-vocab">Vocabulary</a><a href="#s-progress">Progress</a><a href="#admin" id="pAdminTab" hidden>Admin</a>
     </div>
   </nav>
   <div class="wrap p-main" id="pMain"></div>
@@ -1053,8 +1056,6 @@
 (() => {
   /* ===================== SETTINGS ===================== */
   const INSTRUCTOR_TG = 'https://t.me/rustamovabduaziz';
-  const CODE_SALT = 'v800-rustamov-2026-kq7';      // must match the tracker page
-  const REVOKED_CODES = [];                         // add codes here to block them, e.g. ['ABCD-EFGH']
   const ANNOUNCEMENTS = [
     { date: '2026-11-24', text: 'Welcome to 800 Verbal! Start with Lesson 1, then try Practice Set A. Homework for each lesson is due on class days at 19:59.' }
   ];
@@ -1196,14 +1197,81 @@
     ['wary','adj.','cautious about possible danger','Be wary of answer choices that are too extreme.']
   ].map(([w, p, d, s]) => ({ w, p, d, s }));
 
-  /* ===================== STATE ===================== */
-  // Progress is kept per access code, so signing out never erases it.
-  const CUR = 'v800-current', PKEY = c => 'v800-p-' + c;
-  const loadProfile = c => { try { return JSON.parse(localStorage.getItem(PKEY(c))) || null; } catch (e) { return null; } };
-  const load = () => { try { const c = localStorage.getItem(CUR); return c ? loadProfile(c) : null; } catch (e) { return null; } };
-  const save = () => { if (!S) return; try { localStorage.setItem(PKEY(S.code), JSON.stringify(S)); localStorage.setItem(CUR, S.code); } catch (e) {} };
-  let S = load();
-  function fresh(code, name) { return { code, name, since: new Date().toISOString(), lessons: {}, hw: {}, attempts: [], vocab: {}, studySecs: 0, target: '' }; }
+  /* ===================== STATE + GOOGLE SIGN-IN (Firebase) ===================== */
+  // Public web configuration (safe to publish; access is enforced by the database rules).
+  const FB_CONFIG = {
+    apiKey: 'AIzaSyDwvUYc4RE9fT7jiEfYJBH6m6R27lE_ZPY',
+    authDomain: 'verbal-372f3.firebaseapp.com',
+    projectId: 'verbal-372f3',
+    storageBucket: 'verbal-372f3.firebasestorage.app',
+    messagingSenderId: '267399097866',
+    appId: '1:267399097866:web:5593ef5d8c096e242d79f3'
+  };
+  let auth = null, fdb = null;
+  try { firebase.initializeApp(FB_CONFIG); auth = firebase.auth(); fdb = firebase.firestore(); } catch (e) { console.warn('Firebase unavailable', e); }
+  const A = { ready: false, user: null, approved: false, isAdmin: false, request: null, studentDoc: null, error: '' };
+  const PKEY = uid => 'v800-g-' + uid;
+  const loadProfile = uid => { try { return JSON.parse(localStorage.getItem(PKEY(uid))) || null; } catch (e) { return null; } };
+  let S = null;
+
+  // Progress is saved on the device instantly and to the student's Google account at most once a minute.
+  let syncT = null, lastSync = 0;
+  function cloudSync(force) {
+    if (!S || !fdb || !A.user || !(A.approved || A.isAdmin)) return;
+    clearTimeout(syncT);
+    const run = () => {
+      lastSync = Date.now(); S.updatedAt = new Date().toISOString();
+      try { localStorage.setItem(PKEY(S.uid), JSON.stringify(S)); } catch (e) {}
+      fdb.collection('progress').doc(A.user.uid).set({ data: JSON.stringify(S), updatedAt: S.updatedAt }).catch(() => {});
+    };
+    const wait = 60000 - (Date.now() - lastSync);
+    if (force || wait <= 0) run(); else syncT = setTimeout(run, wait);
+  }
+  const save = () => { if (!S) return; try { localStorage.setItem(PKEY(S.uid), JSON.stringify(S)); } catch (e) {} cloudSync(false); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') cloudSync(true); });
+  function fresh(uid, name, email) { return { uid, email, name, since: new Date().toISOString(), lessons: {}, hw: {}, attempts: [], vocab: {}, studySecs: 0, target: '' }; }
+
+  function friendlyAuthError(e) {
+    const c = (e && e.code) || '';
+    if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return '';
+    if (c === 'auth/network-request-failed') return 'No internet connection. Check your connection and try again.';
+    if (c === 'auth/unauthorized-domain') return 'Google sign-in is not enabled for this web address yet. Please tell the instructor.';
+    if (c === 'auth/web-storage-unsupported' || c === 'auth/operation-not-supported-in-this-environment') return 'Google sign-in does not work inside this app. Open the site in Chrome or Safari.';
+    return 'Sign-in failed. Please try again. (' + (c || 'unknown error') + ')';
+  }
+
+  async function onUser(user) {
+    Object.assign(A, { user, approved: false, isAdmin: false, request: null, studentDoc: null, error: '' });
+    if (!user) { S = null; A.ready = true; return rerender(); }
+    const email = (user.email || '').toLowerCase();
+    try {
+      const st = await fdb.collection('students').doc(email).get();
+      A.approved = st.exists; A.studentDoc = st.exists ? st.data() : null;
+    } catch (e) { A.error = 'Could not check your access. Check your internet connection and reload the page.'; }
+    try { await fdb.collection('requests').limit(1).get(); A.isAdmin = true; } catch (e) { A.isAdmin = false; }
+    if (A.approved || A.isAdmin) {
+      let local = loadProfile(user.uid);
+      try {
+        const p = await fdb.collection('progress').doc(user.uid).get();
+        if (p.exists) { const remote = JSON.parse(p.data().data); if (!local || (remote.updatedAt || '') > (local.updatedAt || '')) local = remote; }
+      } catch (e) {}
+      const name = (A.studentDoc && A.studentDoc.name) || (user.displayName || '').split(' ')[0] || 'Student';
+      S = local || fresh(user.uid, name, email);
+      S.uid = user.uid; S.email = email; S.name = name;
+      try { const app = JSON.parse(localStorage.getItem('v800-app')); if (app && app.target && !S.target) S.target = app.target; } catch (e) {}
+      try { localStorage.setItem(PKEY(S.uid), JSON.stringify(S)); } catch (e) {}
+    } else {
+      S = null;
+      try { const r = await fdb.collection('requests').doc(user.uid).get(); A.request = r.exists ? r.data() : null; } catch (e) {}
+    }
+    A.ready = true; rerender();
+  }
+  function rerender() { const h = location.hash.slice(1); if (VIEWS.includes(h)) render(h); }
+  function startAuth() {
+    if (!auth) { A.ready = true; A.error = 'Sign-in could not load. Check your internet connection and reload the page.'; return; }
+    auth.getRedirectResult().catch(e => { A.error = friendlyAuthError(e); rerender(); });
+    auth.onAuthStateChanged(onUser);
+  }
 
   /* ===================== HELPERS ===================== */
   const q$ = id => document.getElementById(id);
@@ -1214,12 +1282,6 @@
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const qById = id => QUESTIONS.find(x => x.id === id);
 
-  /* access codes: XXXX-XXXX, second half is a checksum of the first */
-  const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  function fnv(s) { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
-  function sig(r) { let h = fnv(CODE_SALT + r), o = ''; for (let i = 0; i < 4; i++) { o += ALPH[h % 32]; h = Math.floor(h / 32); } return o; }
-  function normCode(v) { const c = String(v).toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length === 8 ? c.slice(0, 4) + '-' + c.slice(4) : null; }
-  function validCode(v) { const c = normCode(v); if (!c) return null; const [a, b] = c.split('-'); if ([...a + b].some(ch => !ALPH.includes(ch))) return null; return sig(a) === b && !REVOKED_CODES.includes(c) ? c : null; }
 
   function nextDeadline() {
     // Tue/Thu/Sat 19:59 Uzbekistan time (UTC+5) = 14:59 UTC
@@ -1233,7 +1295,7 @@
   }
 
   /* ===================== ROUTER ===================== */
-  const VIEWS = ['student', 's-lessons', 's-practice', 's-mock', 's-homework', 's-vocab', 's-progress'];
+  const VIEWS = ['student', 's-lessons', 's-practice', 's-mock', 's-homework', 's-vocab', 's-progress', 'admin'];
   const landingEls = () => [document.querySelector('header.nav'), q$('top'), document.querySelector('body > footer'), document.querySelector('.mbar')];
   let sub = {};           // per-view sub state (selected lesson, active test, vocab mode)
   let tick = null;        // interval for timers
@@ -1258,18 +1320,24 @@
 
   function render(view) {
     stopTick();
+    adminUnsubs.forEach(u => u()); adminUnsubs = [];
     const main = q$('pMain');
-    const signedIn = !!(S && validCode(S.code));
-    q$('pUser').hidden = !signedIn; q$('pTabs').hidden = !signedIn;
+    const signedIn = !!(S && A.user && (A.approved || A.isAdmin));
+    q$('pUser').hidden = !A.user; q$('pTabs').hidden = !signedIn;
+    q$('pAdminTab').hidden = !A.isAdmin;
+    if (A.user) q$('pName').textContent = S ? S.name : A.user.email;
+    if (view === 'admin' && A.isAdmin) { document.querySelectorAll('#pTabs a').forEach(a => a.classList.toggle('on', a.id === 'pAdminTab')); return renderAdmin(main); }
     if (!signedIn) { renderLogin(main); return; }
-    q$('pName').textContent = S.name;
+    if (view === 'admin') view = 'student';
     document.querySelectorAll('#pTabs a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + view));
     ({ 'student': renderDash, 's-lessons': renderLessons, 's-practice': renderPractice, 's-mock': renderMockHome, 's-homework': renderHomework, 's-vocab': renderVocab, 's-progress': renderProgress }[view])(main);
   }
 
-  q$('pOut').addEventListener('click', () => {
-    S = null; try { localStorage.removeItem(CUR); } catch (e) {}
-    sub = {}; render('student');
+  let adminUnsubs = [];
+  q$('pOut').addEventListener('click', async () => {
+    cloudSync(true);
+    sub = {}; S = null;
+    try { await auth.signOut(); } catch (e) {}
   });
   // Clicking a tab always opens that section's main page
   document.querySelectorAll('#pTabs a').forEach(a => a.addEventListener('click', e => {
@@ -1285,7 +1353,7 @@
         <div style="display:grid;gap:14px">
           <span class="note">Student area</span>
           <h1>Everything for your course, in one place.</h1>
-          <p class="p-sub">Enter the personal access code your instructor sent you after payment.</p>
+          <p class="p-sub">Sign in with the Google account you registered with. New students register once with Google, then get approved by the instructor.</p>
           <ul>
             <li>${icon('i-play')}8 strategy lessons with notes and worked examples</li>
             <li>${icon('i-timer')}Timed practice tests with instant explanations</li>
@@ -1294,36 +1362,121 @@
             <li>${icon('i-chart')}Your progress, study time and score target</li>
           </ul>
         </div>
-        <form class="form-card" id="loginForm" novalidate>
-          <h3>Sign in</h3>
-          <p>Your code looks like <b style="font-family:var(--mono)">K7QD-M2XP</b>.</p>
-          <div style="display:grid;gap:14px">
-            <div class="fld"><label for="l-code">Access code</label><input id="l-code" class="codein" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX" /></div>
-            <div class="fld"><label for="l-name">Your first name</label><input id="l-name" autocomplete="given-name" placeholder="e.g. Madina" /></div>
-            <span class="err" id="l-err" style="font-size:14px;color:var(--err)"></span>
-            <button class="btn btn-deep" type="submit">Enter the student area ${icon('i-arrow')}</button>
-          </div>
-          <p style="margin-top:16px;font-size:14px;color:var(--ink-2)">No code yet? <a href="#apply" style="color:var(--deep-3);font-weight:700">Apply first</a> or <a href="${INSTRUCTOR_TG}" target="_blank" rel="noopener" style="color:var(--deep-3);font-weight:700">message the instructor</a>.</p>
-        </form>
+        <div class="form-card" id="loginCard"></div>
       </div>`;
-    const codeIn = q$('l-code');
-    codeIn.addEventListener('input', () => {
-      let v = codeIn.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-      codeIn.value = v.length > 4 ? v.slice(0, 4) + '-' + v.slice(4) : v;
-    });
-    q$('loginForm').addEventListener('submit', e => {
+    const card = q$('loginCard');
+    const help = `<p style="margin-top:16px;font-size:14px;color:var(--ink-2)">Not a student yet? <a href="#apply" style="color:var(--deep-3);font-weight:700">Apply first</a> or <a href="${INSTRUCTOR_TG}" target="_blank" rel="noopener" style="color:var(--deep-3);font-weight:700">message the instructor</a>.</p>`;
+
+    if (!A.ready) { card.innerHTML = `<h3>Sign in</h3><p>Checking your sign-in…</p>`; return; }
+
+    if (!A.user) {
+      card.innerHTML = `
+        <h3>Sign in with Google</h3>
+        <p>Use the Gmail account you registered with. You only register once; after that, this account opens the course on any phone or computer.</p>
+        <button class="btn btn-deep" id="gBtn" type="button" style="width:100%;gap:12px"><svg viewBox="0 0 48 48" style="width:20px;height:20px;background:#fff;border-radius:50%;padding:2px" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.9 6.2C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C1 16.5 0 20.1 0 24s1 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.2-13.5-10l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+        <span class="err" id="l-err" style="font-size:14px;color:var(--err);display:block;margin-top:12px">${esc(A.error)}</span>
+        <p style="font-size:13px;color:var(--ink-2);margin-top:6px">Opened this link from Telegram? If sign-in doesn't start, tap ⋮ and choose <b>Open in browser</b> (Chrome or Safari).</p>
+        ${help}`;
+      q$('gBtn').addEventListener('click', async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        q$('l-err').textContent = '';
+        try { await auth.signInWithPopup(provider); }
+        catch (e) {
+          if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) { try { await auth.signInWithRedirect(provider); return; } catch (e2) { e = e2; } }
+          q$('l-err').textContent = friendlyAuthError(e);
+        }
+      });
+      return;
+    }
+
+    // Signed in with Google but not approved yet
+    const email = (A.user.email || '').toLowerCase();
+    if (A.request) {
+      card.innerHTML = `
+        <h3>Waiting for approval</h3>
+        <p>Your request was sent on <b>${esc(fmtDay(A.request.createdAt))}</b>. As soon as the instructor approves it, this page opens your course.</p>
+        <div class="p-card" style="margin:14px 0;background:var(--paper)"><span class="note">Signed in as</span><p style="margin-top:6px;font-weight:700;overflow-wrap:anywhere">${esc(email)}</p></div>
+        <div class="p-btnrow"><button class="btn btn-deep btn-sm" id="chk" type="button">Check again</button><a class="btn btn-outline btn-sm" href="${INSTRUCTOR_TG}" target="_blank" rel="noopener">${icon('i-send')}Message the instructor</a></div>
+        <p style="font-size:13.5px;color:var(--ink-2);margin-top:14px">Wrong account? <button class="p-link" id="swap" type="button">Use a different Google account</button></p>`;
+      q$('chk').addEventListener('click', () => { A.ready = false; render('student'); onUser(auth.currentUser); });
+    } else {
+      card.innerHTML = `
+        <h3>One-time registration</h3>
+        <p>You're signed in as <b style="overflow-wrap:anywhere">${esc(email)}</b>. Send a short request so the instructor can give this account access.</p>
+        <form id="reqForm" novalidate style="display:grid;gap:12px;margin-top:12px">
+          <div class="fld"><label for="r-name">Your full name</label><input id="r-name" autocomplete="name" value="${esc(A.user.displayName || '')}" /></div>
+          <div class="fld"><label for="r-reg">Registration number <small>(optional, from your application)</small></label><input id="r-reg" placeholder="8V-1124-0371" /></div>
+          <span class="err" id="r-err" style="font-size:14px;color:var(--err)">${esc(A.error)}</span>
+          <button class="btn btn-deep" type="submit">Send access request ${icon('i-arrow')}</button>
+        </form>
+        <p style="font-size:13.5px;color:var(--ink-2);margin-top:14px">Wrong account? <button class="p-link" id="swap" type="button">Use a different Google account</button></p>`;
+      q$('reqForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const name = q$('r-name').value.trim(), reg = q$('r-reg').value.trim().toUpperCase().slice(0, 30);
+        if (name.length < 3) { q$('r-err').textContent = 'Please enter your full name.'; return; }
+        const req = { email, name: name.slice(0, 80), reg, createdAt: new Date().toISOString() };
+        try { await fdb.collection('requests').doc(A.user.uid).set(req); A.request = req; render('student'); }
+        catch (err) { q$('r-err').textContent = 'Could not send the request. Check your connection and try again.'; }
+      });
+    }
+    q$('swap').addEventListener('click', async () => { try { await auth.signOut(); } catch (e) {} });
+  }
+
+  /* ===================== ADMIN: approve students ===================== */
+  function renderAdmin(main) {
+    main.innerHTML = `
+      <div class="p-grid">
+        <div><span class="note">Admin</span><h1 style="margin-top:8px">Student access</h1><p class="p-sub">Approve a student's Google account after payment. Approved accounts open the Student area on any device.</p></div>
+        <div class="p-card"><h3>Waiting for approval</h3><div id="adReq" style="margin-top:10px"><p class="p-sub">Loading…</p></div></div>
+        <div class="p-card"><h3>Add a student by Gmail</h3><p class="p-sub" style="margin:4px 0 12px">Use this if a student hasn't sent a request yet. They can then sign in directly.</p>
+          <form id="adAdd" class="grid2" novalidate><div class="fld"><label for="ad-name">Full name</label><input id="ad-name" /></div><div class="fld"><label for="ad-mail">Gmail address</label><input id="ad-mail" type="email" placeholder="student@gmail.com" /></div>
+          <div class="fld full"><button class="btn btn-deep btn-sm" type="submit" style="justify-self:start">Give access</button><span class="err" id="ad-msg" style="font-size:14px"></span></div></form></div>
+        <div class="p-card"><h3>Approved students <span class="tag" id="adCount"></span></h3><div id="adStu" style="margin-top:10px"><p class="p-sub">Loading…</p></div></div>
+      </div>`;
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const approve = async (r, id) => {
+      const batch = fdb.batch();
+      batch.set(fdb.collection('students').doc(r.email), { name: r.name || '', email: r.email, reg: r.reg || '', approvedAt: new Date().toISOString() });
+      batch.delete(fdb.collection('requests').doc(id));
+      await batch.commit();
+    };
+    adminUnsubs.push(fdb.collection('requests').onSnapshot(snap => {
+      const box = q$('adReq'); if (!box) return; box.textContent = '';
+      if (snap.empty) { box.append(el('p', 'p-sub', 'No requests right now.')); return; }
+      const ul = el('ul', 'p-list'); ul.style.margin = '0';
+      snap.docs.sort((a, b) => String(b.data().createdAt).localeCompare(String(a.data().createdAt))).forEach(d => {
+        const r = d.data(), li = el('li'), info = el('span');
+        info.append(el('b', null, r.name || '(no name)'), el('small', null, r.email + (r.reg ? ' · ' + r.reg : '') + ' · ' + fmtDay(r.createdAt)));
+        const btns = el('span', 'p-btnrow');
+        const ok = el('button', 'btn btn-deep btn-sm', 'Approve'); ok.type = 'button';
+        const no = el('button', 'p-link', 'Decline'); no.type = 'button';
+        ok.addEventListener('click', async () => { ok.disabled = true; try { await approve(r, d.id); } catch (e) { ok.disabled = false; ok.textContent = 'Failed, retry'; } });
+        no.addEventListener('click', async () => { if (!no.dataset.sure) { no.dataset.sure = '1'; no.textContent = 'Click again to decline'; return; } try { await fdb.collection('requests').doc(d.id).delete(); } catch (e) {} });
+        btns.append(ok, no); li.append(info, btns); ul.append(li);
+      });
+      box.append(ul);
+    }, () => { const box = q$('adReq'); if (box) box.textContent = 'Could not load requests.'; }));
+    adminUnsubs.push(fdb.collection('students').onSnapshot(snap => {
+      const box = q$('adStu'); if (!box) return; box.textContent = ''; q$('adCount').textContent = snap.size;
+      if (snap.empty) { box.append(el('p', 'p-sub', 'No approved students yet.')); return; }
+      const ul = el('ul', 'p-list'); ul.style.margin = '0';
+      snap.docs.sort((a, b) => String(b.data().approvedAt).localeCompare(String(a.data().approvedAt))).forEach(d => {
+        const s = d.data(), li = el('li'), info = el('span');
+        info.append(el('b', null, s.name || '(no name)'), el('small', null, d.id + (s.reg ? ' · ' + s.reg : '') + ' · approved ' + fmtDay(s.approvedAt)));
+        const rm = el('button', 'p-link', 'Remove access'); rm.type = 'button'; rm.style.color = 'var(--err)';
+        rm.addEventListener('click', async () => { if (!rm.dataset.sure) { rm.dataset.sure = '1'; rm.textContent = 'Click again to remove'; return; } try { await fdb.collection('students').doc(d.id).delete(); } catch (e) {} });
+        li.append(info, rm); ul.append(li);
+      });
+      box.append(ul);
+    }, () => { const box = q$('adStu'); if (box) box.textContent = 'Could not load students.'; }));
+    q$('adAdd').addEventListener('submit', async e => {
       e.preventDefault();
-      const c = validCode(codeIn.value), n = q$('l-name').value.trim();
-      if (!c) { q$('l-err').textContent = 'That code isn’t valid. Check each character, or ask the instructor for a new one.'; codeIn.focus(); return; }
-      if (n.length < 2) { q$('l-err').textContent = 'Please enter your first name.'; q$('l-name').focus(); return; }
-      const prev = loadProfile(c);
-      S = prev ? Object.assign(prev, { name: n }) : fresh(c, n);
-      try { const app = JSON.parse(localStorage.getItem('v800-app')); if (app && app.target && !S.target) S.target = app.target; } catch (err) {}
-      save();
-      const h = location.hash.slice(1);
-      render(VIEWS.includes(h) ? h : 'student');
+      const name = q$('ad-name').value.trim(), mail = q$('ad-mail').value.trim().toLowerCase(), msg = q$('ad-msg');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.style.color = 'var(--err)'; msg.textContent = ' Enter a valid email address.'; return; }
+      try { await fdb.collection('students').doc(mail).set({ name, email: mail, reg: '', approvedAt: new Date().toISOString() }); msg.style.color = 'var(--ok)'; msg.textContent = ' Access given to ' + mail + '.'; q$('ad-name').value = ''; q$('ad-mail').value = ''; }
+      catch (err) { msg.style.color = 'var(--err)'; msg.textContent = ' Could not save. Try again.'; }
     });
-    codeIn.focus();
   }
 
   /* ===================== DASHBOARD ===================== */
@@ -1602,7 +1755,7 @@
     const tas = [...main.querySelectorAll('textarea[data-k]')];
     tas.forEach(ta => { ta.value = h.answers[ta.dataset.k] || ''; });
     const build = () => {
-      const lines = [`800 VERBAL · HOMEWORK · Lesson ${i + 1}: ${l.title}`, `Student: ${S.name} · Code ${S.code}`, ''];
+      const lines = [`800 VERBAL · HOMEWORK · Lesson ${i + 1}: ${l.title}`, `Student: ${S.name} · ${S.email}`, ''];
       l.hw.forEach((t, k) => { lines.push(`${k + 1}. ${t}`, `→ ${h.answers[k] ? h.answers[k].trim() : '(no answer)'}`, ''); });
       q$('hMsg').textContent = lines.join('\n').trim();
     };
@@ -1741,7 +1894,7 @@
     const recent = S.attempts.slice(-10);
     main.innerHTML = `
       <div class="p-grid">
-        <div><h1>Your progress</h1><p class="p-sub">Saved on this device since ${esc(fmtDay(S.since))}. If you switch devices, sign in with the same code; progress starts fresh there.</p></div>
+        <div><h1>Your progress</h1><p class="p-sub">Saved to your Google account since ${esc(fmtDay(S.since))}. Sign in with the same Google account on any device to continue.</p></div>
         <div class="p-k">
           <div><b>${st.lessonsDone}/8</b><span>lessons completed</span></div>
           <div><b>${st.hwSent}/8</b><span>homework sent</span></div>
@@ -2384,6 +2537,7 @@
     q$('srBack').addEventListener('click', () => { sub.mockResult = null; renderMockHome(main); window.scrollTo(0, 0); });
   }
 
+  startAuth();
   route();
 })();
 </script>
