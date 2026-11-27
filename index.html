@@ -1162,6 +1162,8 @@
 
 <script src="premium-mock-1.js"></script>
 <script src="premium-mock-2.js"></script>
+<script src="premium-mock-3.js"></script>
+<script src="premium-mock-4.js"></script>
 <script>
 (() => {
   /* ===================== SETTINGS ===================== */
@@ -2300,6 +2302,8 @@
   const MOCKS = [
     ...(window.PM1 ? [premium('pm1', 'Premium Mock #1', window.PM1)] : []),
     ...(window.PM2 ? [premium('pm2', 'Premium Mock #2', window.PM2)] : []),
+    ...(window.PM3 ? [premium('pm3', 'Premium Mock #3', window.PM3)] : []),
+    ...(window.PM4 ? [premium('pm4', 'Premium Mock #4', window.PM4)] : []),
     { id: 'mock1', title: 'Full-Length Mock 1', mods: [
       { key: 'rw1', sec: 'rw', title: 'Section 1, Module 1: Reading and Writing', mins: 32, qs: MOCK1_RW1 },
       { key: 'rw2', sec: 'rw', title: 'Section 1, Module 2: Reading and Writing', mins: 32, qs: MOCK1_RW2 },
