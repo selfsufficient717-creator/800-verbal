@@ -1160,6 +1160,8 @@
   <div class="bb-modal" id="bbModal" hidden><div id="bbModalIn"></div></div>
 </div>
 
+<script src="premium-mock-1.js"></script>
+<script src="premium-mock-2.js"></script>
 <script>
 (() => {
   /* ===================== SETTINGS ===================== */
@@ -2285,7 +2287,19 @@
     { d: 'adv', t: 'The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = −2<i>x</i><sup>2</sup> + 12<i>x</i> − 7. What is the maximum value of <i>f</i>(<i>x</i>)?', c: null, a: 11, e: 'The vertex is at x = −12 ÷ (2 × −2) = 3; f(3) = −18 + 36 − 7 = 11.' }
   ];
 
+  /* Adaptive modules: Module 2 has a harder and an easier version. The route is chosen from Module 1 results. */
+  let routeCtx = null;
+  const routeOf = key => ((routeCtx || (S.mockRun && S.mockRun.route) || {})[key]) || 'hard';
+  const adaptive = (key, sec, title, mins, cut, hard, easy) => ({ key, sec, title, mins, cut, hard, easy, get qs() { return this[routeOf(this.key)]; } });
+  const premium = (id, title, P) => ({ id, title, premium: true, mods: [
+    { key: 'rw1', sec: 'rw', title: 'Section 1, Module 1: Reading and Writing', mins: 32, qs: P.rw1 },
+    adaptive('rw2', 'rw', 'Section 1, Module 2: Reading and Writing', 32, 18, P.rw2h, P.rw2e),
+    { key: 'm1', sec: 'm', title: 'Section 2, Module 1: Math', mins: 35, qs: P.m1 },
+    adaptive('m2', 'm', 'Section 2, Module 2: Math', 35, 15, P.m2h, P.m2e)
+  ] });
   const MOCKS = [
+    ...(window.PM1 ? [premium('pm1', 'Premium Mock #1', window.PM1)] : []),
+    ...(window.PM2 ? [premium('pm2', 'Premium Mock #2', window.PM2)] : []),
     { id: 'mock1', title: 'Full-Length Mock 1', mods: [
       { key: 'rw1', sec: 'rw', title: 'Section 1, Module 1: Reading and Writing', mins: 32, qs: MOCK1_RW1 },
       { key: 'rw2', sec: 'rw', title: 'Section 1, Module 2: Reading and Writing', mins: 32, qs: MOCK1_RW2 },
@@ -2304,6 +2318,13 @@
   /* estimated raw-to-scaled conversion (interpolated; not an official College Board table) */
   const CURVE_RW = [[0, 200], [5, 260], [10, 330], [15, 400], [20, 460], [25, 510], [30, 560], [35, 600], [40, 650], [45, 700], [50, 750], [52, 770], [54, 800]];
   const CURVE_M = [[0, 200], [5, 280], [10, 360], [15, 430], [20, 490], [25, 540], [30, 590], [35, 650], [38, 690], [41, 740], [43, 770], [44, 800]];
+  /* premium (adaptive) curves: the easier Module 2 caps the section score, the harder one opens the top of the scale */
+  const CURVES = {
+    rw: { hard: [[0, 200], [10, 340], [18, 450], [24, 520], [30, 580], [35, 630], [40, 680], [45, 730], [50, 770], [52, 790], [54, 800]],
+          easy: [[0, 200], [5, 260], [10, 320], [15, 380], [20, 430], [25, 480], [30, 520], [35, 560], [40, 590], [45, 620], [50, 640], [54, 650]] },
+    m: { hard: [[0, 200], [10, 360], [15, 450], [20, 520], [25, 570], [30, 620], [35, 680], [38, 720], [41, 760], [43, 790], [44, 800]],
+         easy: [[0, 200], [5, 270], [10, 340], [15, 400], [20, 460], [25, 510], [30, 550], [35, 590], [40, 620], [44, 650]] }
+  };
   function scale(raw, curve) {
     for (let k = 1; k < curve.length; k++) {
       const [r0, s0] = curve[k - 1], [r1, s1] = curve[k];
@@ -2340,7 +2361,7 @@
           <div class="p-grid">
             ${MOCKS.map(m => { const mine = past.filter(p => p.test === m.id); const best = mine.length ? Math.max(...mine.map(p => p.total)) : null; const isRun = run && run.test === m.id; return `
               <div class="p-card" style="display:grid;gap:12px">
-                <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:start"><div><span class="note">Original 800 Verbal mock</span><h3 style="margin-top:6px;font-size:22px">${esc(m.title)}</h3></div>${best != null ? `<span class="tag ok">Best: ${best}</span>` : ''}</div>
+                <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:start"><div><span class="note">${m.premium ? 'Premium · adaptive · harder questions' : 'Original 800 Verbal mock'}</span><h3 style="margin-top:6px;font-size:22px">${esc(m.title)}</h3>${m.premium ? '<p class="p-sub" style="margin:4px 0 0;font-size:13.5px">Module 2 adapts: do well on Module 1 and you get the harder Module 2 (needed for scores above 650); otherwise you get the easier one.</p>' : ''}</div>${best != null ? `<span class="tag ok">Best: ${best}</span>` : ''}</div>
                 <ul class="p-list" style="margin:0">${m.mods.map(md => `<li><span><b>${esc(md.title)}</b></span><span class="tag">${md.qs.length} Qs · ${md.mins} min</span></li>`).join('')}</ul>
                 <div class="p-btnrow">${isRun ? `<button class="btn btn-deep btn-sm" data-resume type="button">Resume test ${icon('i-arrow')}</button><button class="p-link" data-restart="${m.id}" type="button">Start over</button>` : `<button class="btn btn-deep btn-sm" data-start="${m.id}" type="button">Start the test ${icon('i-arrow')}</button>`}</div>
               </div>`; }).join('')}
@@ -2354,7 +2375,7 @@
               <li>For Math, the Desmos calculator opens in a new tab, and the reference sheet is built in.</li>
               <li>If you close the page, your answers are saved and you can resume. The timer keeps running.</li></ul></div>
             <div class="p-card"><h3>Your scores</h3>${past.length ? `<ul class="p-list">${past.slice().reverse().map((p, k) => `<li><span><b>${esc(MOCKS.find(m => m.id === p.test)?.title || 'Mock')}: ${p.total}</b><small>R&amp;W ${p.rw} · Math ${p.math} · ${esc(fmtDay(p.date))}</small></span><button class="p-link" data-report="${past.length - 1 - k}" type="button">Report</button></li>`).join('')}</ul>` : '<p class="p-sub">Your score reports will appear here.</p>'}
-              <p class="p-sub" style="font-size:12.5px;margin-top:10px">Scores are estimates from a standard conversion curve. This mock's second modules are not adaptive.</p></div>
+              <p class="p-sub" style="font-size:12.5px;margin-top:10px">Scores are estimates from a standard conversion curve. Premium mocks are adaptive; Mocks 1 and 2 are not.</p></div>
           </div>
         </div>
       </div>`;
@@ -2420,6 +2441,11 @@
     r.phase = curMod().sec === 'rw' && curTest().mods[r.mod + 1].sec === 'm' ? 'break' : 'between';
     r.timeUp = !!timeUp;
     if (r.phase === 'break') r.breakEnd = Date.now() + BREAK_MIN * 60000;
+    const next = curTest().mods[r.mod + 1];
+    if (next.cut != null) {  // adaptive routing from this module's results
+      const md = curMod(), correct = md.qs.filter((q, j) => isCorrect(q, r.ans[md.key][j])).length;
+      r.route = r.route || {}; r.route[next.key] = correct >= next.cut ? 'hard' : 'easy';
+    }
     r.mod += 1; save(); bbRender();
   }
 
@@ -2611,16 +2637,22 @@
       modules.push({ key: md.key, title: md.title, c, t: md.qs.length });
       if (md.sec === 'rw') rwRaw += c; else mRaw += c;
     });
-    const rw = scale(rwRaw, CURVE_RW), math = scale(mRaw, CURVE_M);
+    const route = t.premium ? { rw2: routeOf('rw2'), m2: routeOf('m2') } : null;
+    const rw = scale(rwRaw, route ? CURVES.rw[route.rw2] : CURVE_RW), math = scale(mRaw, route ? CURVES.m[route.m2] : CURVE_M);
     S.mocks = S.mocks || [];
-    S.mocks.push({ test: t.id, date: new Date().toISOString(), rwRaw, mRaw, rw, math, total: rw + math, byDomain, modules, ans: JSON.parse(JSON.stringify(r.ans)) });
+    S.mocks.push({ test: t.id, date: new Date().toISOString(), rwRaw, mRaw, rw, math, total: rw + math, byDomain, modules, route, ans: JSON.parse(JSON.stringify(r.ans)) });
     S.mockRun = null; save();
     sub.mockResult = S.mocks.length - 1;
     closeBB(); window.scrollTo(0, 0);
   }
 
   function renderScoreReport(main, res) {
+    routeCtx = res.route || {};
+    try { renderReportBody(main, res); } finally { routeCtx = null; }
+  }
+  function renderReportBody(main, res) {
     const t = MOCKS.find(m => m.id === res.test);
+    const routeNote = res.route ? `<p class="p-sub" style="margin:10px 0 0">Adaptive route: Reading and Writing Module 2 was the <b>${res.route.rw2 === 'hard' ? 'harder' : 'easier'}</b> version; Math Module 2 was the <b>${res.route.m2 === 'hard' ? 'harder' : 'easier'}</b> version.${res.route.rw2 === 'easy' || res.route.m2 === 'easy' ? ' The easier version caps that section at about 650.' : ''}</p>` : '';
     const pct = s => ((s - 200) / 600 * 100).toFixed(1);
     const domRows = sec => Object.entries(res.byDomain).filter(([, v]) => v.sec === sec).map(([n, v]) => `
       <div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><b>${esc(n)}</b><span style="font-family:var(--mono)">${v.c}/${v.t}</span></div><div class="meter"><i style="width:${Math.round(v.c / v.t * 100)}%"></i></div></div>`).join('');
@@ -2642,7 +2674,7 @@
             <div class="sr-scale"><i style="width:${pct(res.math)}%"></i></div><div class="sr-scale-l"><span>200</span><span>500</span><span>800</span></div>
             <div style="display:grid;gap:12px;margin-top:18px">${domRows('m')}</div></div>
         </div>
-        <div class="p-card"><h3>By module</h3><ul class="p-list">${res.modules.map(m => `<li><span><b>${esc(m.title)}</b></span><span class="tag">${m.c}/${m.t}</span></li>`).join('')}</ul>
+        <div class="p-card"><h3>By module</h3><ul class="p-list">${res.modules.map(m => `<li><span><b>${esc(m.title)}</b>${res.route && res.route[m.key] ? `<small>${res.route[m.key] === 'hard' ? 'Harder version' : 'Easier version'}</small>` : ''}</span><span class="tag">${m.c}/${m.t}</span></li>`).join('')}</ul>${routeNote}
           <p class="p-sub" style="font-size:12.5px;margin-top:10px">Scores are estimated with a standard raw-to-scaled conversion. Official SAT scores also depend on question difficulty and the adaptive second module.</p></div>
         <h2 style="font-size:22px">Answer review</h2>
         ${review}
