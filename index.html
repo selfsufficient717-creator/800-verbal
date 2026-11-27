@@ -2678,13 +2678,13 @@
     const words = Array.from(msg.querySelectorAll('span')); words.forEach(w => w.classList.remove('on'));
     // restart the CSS entrance animations of the photo and stamp
     intro.querySelectorAll('.intro-frame, .intro-badge').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
-    if (reduce) { typed.textContent = HELLO; words.forEach(w => w.classList.add('on')); intro.classList.add('ready'); document.getElementById('introGo').focus(); return; }
+    if (reduce) { typed.textContent = HELLO; words.forEach(w => w.classList.add('on')); intro.classList.add('ready'); document.getElementById('introGo').focus({ preventScroll: true }); return; }
     let i = 0;
     const type = () => {
       typed.textContent = HELLO.slice(0, ++i);
       if (i < HELLO.length) return later(type, 55);
       words.forEach((w, k) => later(() => w.classList.add('on'), 250 + k * 85));
-      later(() => { intro.classList.add('ready'); document.getElementById('introGo').focus(); }, 450 + words.length * 85);
+      later(() => { intro.classList.add('ready'); document.getElementById('introGo').focus({ preventScroll: true }); }, 450 + words.length * 85);
     };
     later(type, 1500);
   }
